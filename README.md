@@ -33,6 +33,8 @@ The production files, including Markdown files from `public/docs/`, are generate
 
 In the repository's **Settings → Pages**, set **Build and deployment → Source** to **GitHub Actions**. Push the project to the `main` branch of `saifuddin24/pharma-accounting-doc`; the deployment workflow installs dependencies with `npm ci`, builds the site, and deploys `dist/` to GitHub Pages. Every subsequent push to `main` triggers the same workflow. You can also run **Deploy to GitHub Pages** manually from the repository's **Actions** tab.
 
+If the workflow reports `Get Pages site failed` or `Not Found`, make sure GitHub Pages is enabled and its source is set to **GitHub Actions** in [repository Pages settings](https://github.com/saifuddin24/pharma-accounting-doc/settings/pages), then rerun the failed workflow from the **Actions** tab. Changing Pages settings requires repository administrator access. The workflow does not automatically enable Pages: that requires a separately privileged token.
+
 The site uses hash-based routes, such as `https://saifuddin24.github.io/pharma-accounting-doc/#/docs/installation`, so links, refreshes, and browser history work on GitHub Pages without server-side SPA rewrites. The Vite base path is `/pharma-accounting-doc/`; change it if the repository is renamed.
 
 ## Add a documentation page
