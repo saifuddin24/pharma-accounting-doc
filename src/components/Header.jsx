@@ -2,7 +2,7 @@ export default function Header({ query, onQueryChange, onMenuClick }) {
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-slate-200 bg-white/95 px-4 backdrop-blur md:px-6">
       <button className="icon-button lg:hidden" onClick={onMenuClick} aria-label="Open navigation">☰</button>
-      <a href="/" className="flex shrink-0 items-center gap-2 font-semibold tracking-tight text-slate-900">
+      <a href={import.meta.env.BASE_URL} className="flex shrink-0 items-center gap-2 font-semibold tracking-tight text-slate-900">
         <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-900 text-sm text-white">D</span>
         <span>Documentation</span>
       </a>

@@ -23,4 +23,12 @@ export function findPageByPath(path, pages) {
   return pages.find((page) => page.id === path) || pages[0] || null;
 }
 
+export function pageHref(id) {
+  return `#/docs/${id}`;
+}
+
+export function headingHref(pageId, headingId) {
+  return `${pageHref(pageId)}#${encodeURIComponent(headingId)}`;
+}
+
 export { navigation };

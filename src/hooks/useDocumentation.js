@@ -4,6 +4,7 @@ export function useDocumentation(page) {
   const [markdown, setMarkdown] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [loadedFile, setLoadedFile] = useState('');
 
   useEffect(() => {
     if (!page?.file) {
@@ -16,12 +17,15 @@ export function useDocumentation(page) {
     setLoading(true);
     setError('');
 
-    fetch(`/docs/${page.file}`, { signal: controller.signal })
+    fetch(`${import.meta.env.BASE_URL}docs/${page.file}`, { signal: controller.signal })
       .then((response) => {
         if (!response.ok) throw new Error(`Could not load ${page.file}`);
         return response.text();
       })
-      .then(setMarkdown)
+      .then((text) => {
+        setMarkdown(text);
+        setLoadedFile(page.file);
+      })
       .catch((err) => {
         if (err.name !== 'AbortError') setError(err.message);
       })
@@ -32,5 +36,5 @@ export function useDocumentation(page) {
     return () => controller.abort();
   }, [page?.file]);
 
-  return { markdown, loading, error };
+  return { markdown, loading, error, loadedFile };
 }

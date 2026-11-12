@@ -1,7 +1,18 @@
 import React from 'react';
 import { slugify } from './slugify';
+import { headingHref } from './navigation';
 
-function inline(text, keyPrefix = 'inline') {
+function resolveUrl(url, pageId) {
+  if (url.startsWith('#') && !url.startsWith('#/')) {
+    return headingHref(pageId, url.slice(1));
+  }
+  if (url.startsWith('/') && !url.startsWith('//')) {
+    return `${import.meta.env.BASE_URL}${url.slice(1)}`;
+  }
+  return url;
+}
+
+function inline(text, keyPrefix = 'inline', pageId) {
   const tokenPattern = /(`[^`]+`|\*\*[^*]+\*\*|__[^_]+__|\*[^*]+\*|_[^_]+_|!\[[^\]]*\]\([^)]+\)|\[[^\]]+\]\([^)]+\))/g;
   const parts = [];
   let lastIndex = 0;
@@ -23,13 +34,13 @@ function inline(text, keyPrefix = 'inline') {
       parts.push(<em key={key}>{token.slice(1, -1)}</em>);
     } else if (token.startsWith('![')) {
       const parsed = token.match(/^!\[([^\]]*)\]\(([^)]+)\)$/);
-      if (parsed) parts.push(<img key={key} src={parsed[2]} alt={parsed[1]} className="my-5 max-w-full rounded-xl border border-slate-200" />);
+      if (parsed) parts.push(<img key={key} src={resolveUrl(parsed[2], pageId)} alt={parsed[1]} className="my-5 max-w-full rounded-xl border border-slate-200" />);
     } else {
       const parsed = token.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
       if (parsed) {
         const external = /^https?:\/\//i.test(parsed[2]);
         parts.push(
-          <a key={key} href={parsed[2]} target={external ? '_blank' : undefined} rel={external ? 'noreferrer' : undefined}>
+          <a key={key} href={resolveUrl(parsed[2], pageId)} target={external ? '_blank' : undefined} rel={external ? 'noreferrer' : undefined}>
             {parsed[1]}
           </a>,
         );
@@ -42,7 +53,7 @@ function inline(text, keyPrefix = 'inline') {
   return parts;
 }
 
-function parseTable(lines, start) {
+function parseTable(lines, start, pageId) {
   const rows = [];
   let index = start;
   while (index < lines.length && lines[index].trim().startsWith('|')) {
@@ -56,9 +67,9 @@ function parseTable(lines, start) {
     node: (
       <div className="my-6 overflow-x-auto">
         <table className="docs-table">
-          <thead><tr>{rows[0].map((cell, i) => <th key={i}>{inline(cell, `th-${i}`)}</th>)}</tr></thead>
+          <thead><tr>{rows[0].map((cell, i) => <th key={i}>{inline(cell, `th-${i}`, pageId)}</th>)}</tr></thead>
           <tbody>{bodyRows.map((row, ri) => (
-            <tr key={ri}>{rows[0].map((_, ci) => <td key={ci}>{inline(row[ci] || '', `td-${ri}-${ci}`)}</td>)}</tr>
+            <tr key={ri}>{rows[0].map((_, ci) => <td key={ci}>{inline(row[ci] || '', `td-${ri}-${ci}`, pageId)}</td>)}</tr>
           ))}</tbody>
         </table>
       </div>
@@ -67,7 +78,7 @@ function parseTable(lines, start) {
   };
 }
 
-export function parseMarkdown(markdown = '') {
+export function parseMarkdown(markdown = '', pageId) {
   const lines = markdown.replace(/\r\n/g, '\n').split('\n');
   const blocks = [];
   const headings = [];
@@ -101,7 +112,7 @@ export function parseMarkdown(markdown = '') {
       const id = slugify(title);
       headings.push({ id, title, level });
       const Tag = `h${level}`;
-      blocks.push(<Tag id={id} key={blockKey++} className={`docs-h${level}`}>{inline(heading[2])}</Tag>);
+      blocks.push(<Tag id={id} key={blockKey++} className={`docs-h${level}`}>{inline(heading[2], 'inline', pageId)}</Tag>);
       i += 1;
       continue;
     }
@@ -113,7 +124,7 @@ export function parseMarkdown(markdown = '') {
     }
 
     if (line.startsWith('|')) {
-      const table = parseTable(lines, i);
+      const table = parseTable(lines, i, pageId);
       blocks.push(React.cloneElement(table.node, { key: blockKey++ }));
       i = table.next;
       continue;
@@ -125,7 +136,7 @@ export function parseMarkdown(markdown = '') {
         quote.push(lines[i].trim().replace(/^>\s?/, ''));
         i += 1;
       }
-      blocks.push(<blockquote key={blockKey++}>{inline(quote.join(' '))}</blockquote>);
+      blocks.push(<blockquote key={blockKey++}>{inline(quote.join(' '), 'inline', pageId)}</blockquote>);
       continue;
     }
 
@@ -135,7 +146,7 @@ export function parseMarkdown(markdown = '') {
         items.push(lines[i].trim().replace(/^[-*+]\s+/, ''));
         i += 1;
       }
-      blocks.push(<ul key={blockKey++}>{items.map((item, idx) => <li key={idx}>{inline(item, `ul-${idx}`)}</li>)}</ul>);
+      blocks.push(<ul key={blockKey++}>{items.map((item, idx) => <li key={idx}>{inline(item, `ul-${idx}`, pageId)}</li>)}</ul>);
       continue;
     }
 
@@ -145,7 +156,7 @@ export function parseMarkdown(markdown = '') {
         items.push(lines[i].trim().replace(/^\d+\.\s+/, ''));
         i += 1;
       }
-      blocks.push(<ol key={blockKey++}>{items.map((item, idx) => <li key={idx}>{inline(item, `ol-${idx}`)}</li>)}</ol>);
+      blocks.push(<ol key={blockKey++}>{items.map((item, idx) => <li key={idx}>{inline(item, `ol-${idx}`, pageId)}</li>)}</ol>);
       continue;
     }
 
@@ -155,7 +166,7 @@ export function parseMarkdown(markdown = '') {
       paragraph.push(lines[i].trim());
       i += 1;
     }
-    blocks.push(<p key={blockKey++}>{inline(paragraph.join(' '), `p-${blockKey}`)}</p>);
+    blocks.push(<p key={blockKey++}>{inline(paragraph.join(' '), `p-${blockKey}`, pageId)}</p>);
   }
 
   return { blocks, headings };

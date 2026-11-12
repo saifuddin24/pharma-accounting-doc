@@ -1,4 +1,6 @@
-export default function TableOfContents({ headings, activeId }) {
+import { headingHref } from '../utils/navigation';
+
+export default function TableOfContents({ headings, activeId, pageId }) {
   const items = headings.filter((heading) => heading.level >= 2 && heading.level <= 4);
   if (!items.length) return null;
 
@@ -10,7 +12,7 @@ export default function TableOfContents({ headings, activeId }) {
           {items.map((heading) => (
             <a
               key={`${heading.id}-${heading.level}`}
-              href={`#${heading.id}`}
+              href={headingHref(pageId, heading.id)}
               className={`toc-link ${activeId === heading.id ? 'toc-link-active' : ''}`}
               style={{ paddingLeft: `${12 + (heading.level - 2) * 12}px` }}
             >

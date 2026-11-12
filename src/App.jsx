@@ -6,44 +6,45 @@ import PageNavigation from './components/PageNavigation';
 import { parseMarkdown } from './utils/markdownParser';
 import { useDocumentation } from './hooks/useDocumentation';
 import { useActiveHeading } from './hooks/useActiveHeading';
-import { flattenNavigation, navigation } from './utils/navigation';
+import { flattenNavigation, navigation, pageHref } from './utils/navigation';
 
-function readRoute(pages) {
-  const id = window.location.pathname.split('/').filter(Boolean).at(-1);
-  return pages.find((page) => page.id === id) || pages[0];
+function readRoute(hash, pages) {
+  const [path, encodedHeading] = hash.slice(1).split('#');
+  const id = path.match(/^\/docs\/([^/]+)$/)?.[1];
+  const heading = encodedHeading
+    ? new URLSearchParams(`heading=${encodedHeading}`).get('heading')
+    : '';
+  return { page: pages.find((item) => item.id === id) || pages[0], heading };
 }
 
 export default function App() {
   const pages = useMemo(() => flattenNavigation(), []);
-  const [page, setPage] = useState(() => readRoute(pages));
+  const [hash, setHash] = useState(() => window.location.hash);
+  const { page, heading } = readRoute(hash, pages);
   const [query, setQuery] = useState('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { markdown, loading, error } = useDocumentation(page);
-  const parsedForHeadings = useMemo(() => {
-    // Headings are extracted by the same parser used by the content renderer.
-    const matches = [...markdown.matchAll(/^(#{1,6})\s+(.+)$/gm)];
-    return matches.map((match) => {
-      const title = match[2].replace(/[*_`]/g, '').trim();
-      return {
-        id: title.toLowerCase().trim().replace(/[`~!@#$%^&*()=+[\]{}\\|:;"'<>,.?/]/g, '').replace(/\s+/g, '-'),
-        title,
-        level: match[1].length,
-      };
-    });
-  }, [markdown]);
-  const activeHeading = useActiveHeading(parsedForHeadings);
+  const { markdown, loading, error, loadedFile } = useDocumentation(page);
+  const parsedMarkdown = useMemo(() => parseMarkdown(markdown, page?.id), [markdown, page?.id]);
+  const activeHeading = useActiveHeading(parsedMarkdown.headings);
 
   useEffect(() => {
-    const onPopState = () => setPage(readRoute(pages));
-    window.addEventListener('popstate', onPopState);
-    return () => window.removeEventListener('popstate', onPopState);
-  }, [pages]);
+    const onHashChange = () => setHash(window.location.hash);
+    window.addEventListener('hashchange', onHashChange);
+    return () => window.removeEventListener('hashchange', onHashChange);
+  }, []);
+
+  useEffect(() => {
+    if (loading || error || loadedFile !== page?.file) return;
+    if (heading) {
+      document.getElementById(heading)?.scrollIntoView();
+    } else {
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    }
+  }, [page?.file, heading, loading, error, loadedFile]);
 
   function navigate(nextPage) {
     if (!nextPage?.file) return;
-    const url = `/docs/${nextPage.id}`;
-    window.history.pushState({}, '', url);
-    setPage(nextPage);
+    window.location.hash = pageHref(nextPage.id);
     setMobileMenuOpen(false);
     window.scrollTo({ top: 0, behavior: 'instant' });
   }
@@ -52,8 +53,6 @@ export default function App() {
   const filteredPages = query.trim()
     ? pages.filter((item) => item.title.toLowerCase().includes(query.toLowerCase()))
     : null;
-
-  const parsedMarkdown = useMemo(() => parseMarkdown(markdown), [markdown]);
 
   return (
     <div className="min-h-screen bg-white text-slate-800">
@@ -95,11 +94,10 @@ export default function App() {
                 </>
               )}
             </div>
-            {!loading && !error && <TableOfContents headings={parsedForHeadings} activeId={activeHeading} />}
+            {!loading && !error && <TableOfContents headings={parsedMarkdown.headings} activeId={activeHeading} pageId={page?.id} />}
           </div>
         </main>
       </div>
     </div>
   );
 }
-
