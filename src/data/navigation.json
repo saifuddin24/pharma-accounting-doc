@@ -1,44 +1,23 @@
 [
   {
-    "id": "getting-started",
-    "title": "Getting started",
+    "id": "daily-transactions",
+    "title": "Daily Transactions",
     "children": [
       {
-        "id": "introduction",
-        "title": "Introduction",
-        "file": "getting-started/introduction.md"
+        "id": "daily-sales",
+        "title": "Daily Sales",
+        "file": "daily-transactions/daily-sales.md"
       },
       {
-        "id": "installation",
-        "title": "Installation",
-        "file": "getting-started/installation.md"
+        "id": "daily-purchases",
+        "title": "Daily Purchases",
+        "file": "daily-transactions/daily-purchases.md"
       }
     ]
   },
   {
-    "id": "accounting",
-    "title": "Accounting",
-    "children": [
-      {
-        "id": "chart-of-accounts",
-        "title": "Chart of accounts",
-        "file": "accounting/chart-of-accounts.md"
-      },
-      {
-        "id": "journal-entries",
-        "title": "Journal entries",
-        "file": "accounting/journal-entries.md"
-      },
-      {
-        "id": "reports",
-        "title": "Reports",
-        "file": "accounting/reports.md"
-      }
-    ]
-  },
-  {
-    "id": "inventory",
-    "title": "Inventory",
-    "file": "inventory.md"
+    "id": "chart-of-accounts",
+    "title": "Chart of Accounts",
+    "file": "chart-of-accounts.md"
   }
 ]
